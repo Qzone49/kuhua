@@ -4,6 +4,7 @@
  [task_local]
 #搞基大神-推一推
 cron: 0 0 * * * 
+*/
 
 const $ = new Env('搞基大神-推一推');
 const notify = $.isNode() ? require('./sendNotify') : '';
