@@ -11,7 +11,7 @@
 #雨露均沾，若配置，则车头外的ck随机顺序，这样可以等概率的随到前面来
 export  KOI_FAIR_MODE="true"
 ## 设置1个车头，如果有更多个车头，就写对应数目。仅当车头互助满，才会尝试后面的。
-export KOI_CHETOU_NUMBER="4"
+export KOI_CHETOU_NUMBER="2"
 
 
 cron: 0 5 * * *
