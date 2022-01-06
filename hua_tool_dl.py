@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*
 '''
 Author: Curtin
-功能：脚本依赖下载
+功能：脚本依赖一键下载
 
 cron: 0 5 * * *
 new Env('脚本依赖下载安装');
