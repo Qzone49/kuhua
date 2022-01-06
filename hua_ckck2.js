@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+cron: 0 5 * * *
+new Env('互助院ck检测');
+
 ## Build 20211230-001-fix-test
 
 ## 导入通用变量与函数
