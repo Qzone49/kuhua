@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-cron: 30 23 * * * 
-new Env('互助院ck检测');
-
-## Build 20211230-001-fix-test
+## Build 20220104-001-test
 
 ## 导入通用变量与函数
 dir_shell=/ql/shell
@@ -219,23 +216,6 @@ verify_ck(){
                 tmp11="${pin[i]},"
                 tmp12="$tmp12$tmp11"
             fi
-	
-            if [[ $tmp2 ]] && [[ $NOTIFY_VALID_CK = 1 ]]; then
-                tmp_content1="其中本次启用账号：\n$tmp2\n"
-            elif [[ $tmp2 ]]; then
-                tmp_content1="本次启用账号：\n$tmp2\n"
-            else
-                tmp_content1=""
-            fi
-            [[ $tmp4 ]] && tmp_content2="正常账号：\n$tmp4\n" || tmp_content2=""
-            [[ $tmp8 ]] && tmp_content3="其中本次禁用账号：\n$tmp8\n" || tmp_content3=""
-            [[ $tmp10 ]] && tmp_content4="失效账号：\n$tmp10\n" || tmp_content4=""
-            [[ $tmp12 ]] && temp_expired_ck="$(echo $tmp12 | perl -pe '{s|,$||g}')" || temp_expired_ck=""
-            if [[ $NOTIFY_VALID_CK = 1 ]]; then
-                temp_valid_ck="$tmp_content4$tmp_content3$tmp_content2$tmp_content1"
-            else
-                temp_valid_ck="$tmp_content4$tmp_content3$tmp_content1"
-            fi
             echo -n "${full_name[i]} ${ck_status_chinese[i]}"
             [[ ${ck_status[i]} != ${status[i]} ]] && echo -e "并$(ql_process_env_api ${_id[i]} ${ck_status[i]})" || echo -e ""
         else
@@ -250,7 +230,7 @@ verify_ck(){
                 tmp14="$tmp14$tmp13"
                 none_wskey_pin[i]="${pin[i]}"
             fi
-            [[ $NOTIFY_WSKEY_NO_EXIST = 1 ]] && [[ $tmp14 ]] && temp_no_wsck="\n未录入 JD_WSCK(wskey) 的账号：\n$tmp14\n" || temp_no_wsck=""
+            [[ $NOTIFY_WSKEY_NO_EXIST = 1 ]] && [[ $tmp14 ]] && temp_no_wsck="未录入 JD_WSCK(wskey) 的账号：\n$tmp14\n" || temp_no_wsck=""
         fi
 
         # 账号剩余有效期检查
@@ -271,13 +251,13 @@ verify_ck(){
             echo -e "${full_name[i]} 剩余有效期$valid_time"
             tmp15="${full_name[i]} 剩余有效期$valid_time\n"
             tmp16="$tmp16$tmp15"
-            [[ $NOTIFY_VALID_TIME = 1 ]] && temp_valid_time="\n预测账号有效期：\n$tmp16\n" || temp_valid_time=""
+            [[ $NOTIFY_VALID_TIME = 1 ]] && temp_valid_time="预测账号有效期：\n$tmp16\n" || temp_valid_time=""
         fi
 
         # 生成 CK_WxPusherUid.json 或 CK_WxPusherUid_Sample.json 模板
         if [[ $CK_WxPusherUid = 1 || $CK_WxPusherUid = 2 ]]; then
+            remarks_id[i]="$(echo ${remarks[i]} | awk -F '@@' '{print $1}')"
             if [[ ${remarks[i]} == *@@* ]]; then
-                remarks_id[i]="$(echo ${remarks[i]} | awk -F '@@' '{print $1}')"
                 timestamp_s[i]="$(echo ${remarks[i]} | grep -Eo '@@([0-9]{13})' | grep -Eo '[0-9]{13}' | head -1)"
                 if [[ ! ${timestamp_s[i]} ]]; then
                     timestamp_s[i]=$(echo $[$(date +%s%N)/1000000])
@@ -299,8 +279,8 @@ verify_ck(){
                 tmp19="${full_name[i]}\n"
                 tmp20="$tmp20$tmp19"
             fi
-            [[ $tmp18 ]] && temp_No_UID_1="\n只扫码未对接WxPusher的账号：\n$tmp18\n"
-            [[ $tmp20 ]] && temp_No_UID_2="\n未录入WxPusherUID的账号：\n$tmp20\n"
+            [[ $tmp18 ]] && temp_No_UID_1="只扫码未对接WxPusher的账号：\n$tmp18\n"
+            [[ $tmp20 ]] && temp_No_UID_2="未录入WxPusherUID的账号：\n$tmp20\n"
             tmp21=" {\n\t\"序号\": \"${ori_sn[i]}\",\n\t\"JD_COOKIE\": \"${value[i]}\",\n\t\"pin\": \"${pin[i]}\",\n\t\"备注\": \"${remarks_id[i]}\",\n\t\"pt_pin\": \"${pt_pin[i]}\",\n\t\"Uid\": \"${Uid[i]}\"\n }"
             tmp22="$tmp22,\n$tmp21"
             [[ $CK_WxPusherUid = 1 || $CK_WxPusherUid = 2 ]] && temp_CK_WxPusherUid="[\n$(echo $tmp22 | sed 's/^,\\n//')\n]"
@@ -320,36 +300,53 @@ sort_notify_content(){
         fi
     }
 
-    [[ $dir_scripts/CK_Cache ]] && . $dir_scripts/CK_Cache
-    for i in $@; do
-        if [[ "$(eval echo \$$i)" == "$(eval echo \$${i}_last)" ]]; then
-            eval export ${i}_last="\$$i"
-            if [[ $NOTIFY_SKIP_SAME_CONTENT = 1 ]]; then
-                eval $i=""
-                [[ $i = temp_expired_ck ]] && echo "# 账号有效性检测结果与上次内容一致，本次不推送。" && temp_valid_ck=""
-            fi
-        elif [[ "$(eval echo \$$i)" != "$(eval echo \$"$i"_last)" ]]; then
-            eval export ${i}_last="\$$i"
-        fi
-    done
-    export_cache CK_Cache "$i"_last
-}
-
-## 失效账号一对一通知
-notify_one_to_one(){
-    if [[ $(def_sub JD_COOKIE status 1) ]] && [[ $(echo $WP_APP_TOKEN_ONE|grep -Eo 'AT_(\w{32})') ]]; then
-        for i in $(def_sub JD_COOKIE status 1); do
-            if [ ${Uid[i]} ]; then
-                [[ $MainWP_UID ]] && uids="$(echo $MainWP_UID,${Uid[i]} | perl -pe '{s|^|\"|; s|,|\",\"|g; s|$|\"|}')" || uids="$(echo ${Uid[i]} | perl -pe '{s|^|\"|; s|$|\"|}')"
-                [[ ${none_wskey_pin[i]} ]] && content_1="${ori_full_name[i]} 账号失效<br>${ori_full_name[i]} 未录入 JD_WSCK(wskey)" || content_1="${ori_full_name[i]} 账号失效"
-                if [[ $NOTIFY_SKIP_SAME_CONTENT = 1 ]]; then
-                    [[ $dir_scripts/CK_Cache ]] && . $dir_scripts/CK_Cache && [[ ! $temp_expired_ck_last =~ ${pin[i]} ]] && WxPusher_notify_api $WP_APP_TOKEN_ONE "$content_1" "Cookie 失效通知" "$uids"
-                else
-                    WxPusher_notify_api $WP_APP_TOKEN_ONE "$content_1" "Cookie 失效通知" "$uids"
-                fi
-            fi
+    invalid_pin(){
+        for i in $invalid_sub; do
+            echo ${pin[i]}
         done
+    }
+
+    temp_content1(){
+        echo -n '失效账号：\n'
+        for i in $invalid_sub; do
+            echo -n "${full_name[i]}"
+            [[ ! $temp_expired_ck_last =~ ${pin[i]} ]] && echo -n "(本次禁用)\n" || echo -n "\n"
+        done
+        echo -n "\n"
+    }
+
+    ## 失效账号一对一通知
+    notify_one_to_one(){
+        if [[ $(echo $WP_APP_TOKEN_ONE|grep -Eo 'AT_(\w{32})') ]]; then
+            for i in $invalid_sub; do
+                if [ ${Uid[i]} ]; then
+                    [[ $MainWP_UID ]] && uids="$(echo $MainWP_UID,${Uid[i]} | perl -pe '{s|^|\"|; s|,|\",\"|g; s|$|\"|}')" || uids="$(echo ${Uid[i]} | perl -pe '{s|^|\"|; s|$|\"|}')"
+                    [[ ${none_wskey_pin[i]} ]] && content_1="${ori_full_name[i]} 账号失效<br>${ori_full_name[i]} 未录入 JD_WSCK(wskey)" || content_1="${ori_full_name[i]} 账号失效"
+                    if [[ $NOTIFY_SKIP_SAME_CONTENT = 1 ]]; then
+                        [[ ! $temp_expired_ck_last =~ ${pin[i]} ]] && WxPusher_notify_api $WP_APP_TOKEN_ONE "$content_1" "Cookie 失效通知" "$uids"
+                    else
+                        WxPusher_notify_api $WP_APP_TOKEN_ONE "$content_1" "Cookie 失效通知" "$uids"
+                    fi
+                fi
+            done
+        fi
+    }
+
+    invalid_sub="$(def_sub JD_COOKIE status 1)"
+    temp_expired_ck="$(invalid_pin)"
+    [[ $dir_scripts/CK_Cache ]] && . $dir_scripts/CK_Cache
+    if [[ $temp_expired_ck ]]; then
+        if [[ $NOTIFY_SKIP_SAME_CONTENT = 1 ]] && [[ $temp_expired_ck = $temp_expired_ck_last ]]; then
+            echo "# 失效账号与上次检测结果一致，本次不推送。"
+            temp_valid_ck=""
+        else
+            temp_valid_ck="$(temp_content1)"
+        fi
+        notify_one_to_one
     fi
+
+    temp_expired_ck_last="$temp_expired_ck"
+    export_cache CK_Cache temp_expired_ck_last
 }
 
 ## 选择python3还是node
@@ -374,23 +371,21 @@ echo -n "# 开始检查账号有效性"
 verify_ck
 if [[ $WSKEY_TO_CK = 1 ]]; then
     echo -e "# 正在搜索 wskey 转换脚本 ..."
-    wskey_scr=($(find /ql/scripts -type f -name *wskey*.py))
+    wskey_scr=($(find $dir_scripts -type f -name *wskey*.py))
     if [[ ${wskey_scr[0]} ]]; then
         if [[ $tmp10 ]]; then
             echo -e "# 检测到失效账号，开始执行 wskey 转换 ..."
             define_program $wskey_scr
             $which_program ${wskey_scr[0]}
             echo -e ""
-            echo -e "# 重新检查 Cookie 有效性 ..."
-            verify_ck
         fi
     else
         echo -e "# 未搜索到 wskey 转换脚本，跳过 wskey 转换 ..."
     fi
 fi
 
+sort_notify_content
 notify_one_to_one
-sort_notify_content temp_expired_ck
 notify_content="$temp_valid_ck$temp_no_wsck$temp_No_UID_1$temp_No_UID_2$temp_valid_time"
 
 if [[ $notify_content ]]; then
@@ -399,7 +394,4 @@ if [[ $notify_content ]]; then
     echo -e "# 推送通知..."
     notify "Cookie 状态通知" "$notify_content" >/dev/null 2>&1
 fi
-
-
-echo -e "# 执行完成。"
 
