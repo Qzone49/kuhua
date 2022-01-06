@@ -26,7 +26,7 @@ guaopenwait92="0"
 
 All变量适用
 ————————————————
-入口：[ 12.31~1.9 大牌联合 年货盛宴 (https://lzdz1-isv.isvjcloud.com/dingzhi/customized/common/activity?activityId=dzlhkklblzms20211227&shareUuid=67f78d3ff03d4476817c8a85bc8fe628)]
+入口：[ 12.31~1.9 大牌联合 年货盛宴 (https://lzdz1-isv.isvjcloud.com/dingzhi/customized/common/activity?activityId=dzlhkklblzms20211227&shareUuid=34dc9a347a674f63ac9a186a6858e9ae)]
 
 请求太频繁会被黑ip
 过10分钟再执行
