@@ -5,7 +5,7 @@
 
 需要自己填写inviterId
 邀请分享链接里面包含inviterId,自己找出来就行了
-
+cron: 5 0 * * * 
 
 活动时间：长期
 活动入口：京东极速版app-现金签到
@@ -14,7 +14,6 @@
 
 */
 const $ = new Env('京东极速版助力');
-cron: 5 0 * * * 
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
