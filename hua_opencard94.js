@@ -1,5 +1,5 @@
 /*
-1.5~1.25 集“年味卡”，享年货盛宴 [gua_opencard94.js]
+1.5~1.25青蛙 集“年味卡”，享年货盛宴 [gua_opencard94.js]
 新增开卡脚本
 一次性脚本
 
@@ -105,12 +105,7 @@ let nowTime = new Date().getTime() + new Date().getTimezoneOffset()*60*1000 + 8*
     return;
   }
   $.activityId = "cd2022n4ci22tlj1s2w3245u1mk"
-  $.shareUuid = "
-  
-  
-  
-  
-  "
+  $.shareUuid = ""
   console.log(`入口:\nhttps://lzdz1-isv.isvjcloud.com/dingzhi/customized/common/activity?activityId=${$.activityId}&shareUuid=${$.shareUuid}`)
 
   for (let i = 0; i < cookiesArr.length; i++) {
