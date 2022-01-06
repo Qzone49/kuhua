@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cron: 0 5 * * *
+cron: 30 23 * * *
 new Env('互助院ck检测');
 
 ## Build 20211230-001-fix-test
