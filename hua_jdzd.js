@@ -1,5 +1,5 @@
 /*
-
+组队瓜分 手动写入 [hua_jdzd.js]
 一共有2个变量
 jd_zdjr_activityId  活动ID 必需
 jd_zdjr_activityUrl 活动地址 必需
