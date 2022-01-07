@@ -1,5 +1,5 @@
 /*
-cron "30 23 * * *" hua_CheckCK.js, tag:京东CK检测
+cron "0 21 * * *" hua_CheckCK.js, tag:京东CK检测
  */
 //详细说明参考 https://github.com/ccwav/QLScript2.
 const $ = new Env('京东CK检测');
