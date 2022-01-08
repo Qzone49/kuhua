@@ -41,7 +41,7 @@ if ($.isNode()) {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-const author_codes = ['-ryUXP0JZ2EXYEGXSN7Dokj7yjr-DfMs'].sort(() => 0.5 - Math.random()]
+const author_codes = ['-ryUXP0JZ2EXYEGXSN7Dokj7yjr-DfMs'].sort(() => 0.5 - Math.random())
 const self_code = []
 let pool = []
 !(async () => {
