@@ -1,16 +1,16 @@
 /*
-12.31~1.9 大牌联合 年货盛宴 [gua_opencard92.js]
+1.8~1.15 大牌联合 宠爱有礼 [gua_opencard100.js]
 新增开卡脚本
 一次性脚本
 
 1.邀请一人20豆
-2.开10张卡 成功开1张 有机会获得10豆
+2.开8张卡 成功开1张 有机会获得10豆
 3.关注5京豆
 4.加购5京豆
-  (默认不加购 如需加购请设置环境变量[guaopencard_addSku92]为"true"
-5.抽奖 (默认不抽奖 如需抽奖请设置环境变量[guaopencard_draw92]为"3"
+  (默认不加购 如需加购请设置环境变量[guaopencard_addSku100]为"true"
+5.抽奖 (默认不抽奖 如需抽奖请设置环境变量[guaopencard_draw100]为"3"
 填写要抽奖的次数 不足已自身次数为准
-guaopencard_draw92="3"
+guaopencard_draw100="3"
 填非数字会全都抽奖
 
 第一个账号助力作者 其他依次助力CK1
@@ -18,24 +18,24 @@ guaopencard_draw92="3"
 
 默认脚本不执行
 如需执行脚本请设置环境变量
-guaopencard92="true"
+guaopencard100="true"
 每个账号之间延迟 100=延迟100秒 0=延迟0秒会使用每3个账号延迟60秒
 guaopenwait_All 所有
-guaopenwait92="0"
+guaopenwait100="0"
 
 
 All变量适用
 ————————————————
-入口：[ 12.31~1.9 大牌联合 年货盛宴 (https://lzdz1-isv.isvjcloud.com/dingzhi/customized/common/activity?activityId=dzlhkklblzms20211227&shareUuid=97ac016a6ea04261aa0deac15c8ee3d0)]
+入口：[ 1.8~1.15 大牌联合 宠爱有礼 (https://lzdz1-isv.isvjcloud.com/dingzhi/customized/common/activity?activityId=dzlhkklblzms20220108&shareUuid=97ac016a6ea04261aa0deac15c8ee3d0)]
 
 请求太频繁会被黑ip
 过10分钟再执行
 
-cron:30 2 3-9/2 1 *
+cron:30 3 9-15/3 1 *
 ============Quantumultx===============
 [task_local]
-#12.31~1.9 大牌联合 年货盛宴
-30 2 3-9/2 1 * https://raw.githubusercontent.com/smiek2121/scripts/master/gua_opencard92.js, tag=12.31~1.9 大牌联合 年货盛宴, enabled=true
+#1.8~1.15 大牌联合 宠爱有礼
+30 3 9-15/3 1 * https://raw.githubusercontent.com/smiek2121/scripts/master/gua_opencard100.js, tag=1.8~1.15 大牌联合 宠爱有礼, enabled=true
 
 */
 let guaopencard_addSku = "false"
