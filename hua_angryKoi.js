@@ -14,7 +14,7 @@ export  KOI_FAIR_MODE="true"
 export KOI_CHETOU_NUMBER="2"
 
 
-cron: 0 5 * * *
+cron: 0 0 * * *
 */
 const $ = new Env("愤怒的锦鲤")
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
