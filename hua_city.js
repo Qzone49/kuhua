@@ -1,28 +1,3 @@
-/*
-城城领现金
-
-首个帐号助力作者池子在最后
-其余帐号优先向前内部互助
-有助力码环境变量则助力码在最前
-
-活动时间：2021-05-25到2021-06-03
-更新时间：2021-05-24 09:55
-脚本兼容: QuantumultX, Surge,Loon, JSBox, Node.js
-=================================Quantumultx=========================
-[task_local]
-#城城领现金
-0 0-23/5 * * * https://gitee.com/lxk0301/jd_scripts/raw/master/jd_city.js, tag=城城领现金, img-url=https://raw.githubusercontent.com/Orz-3/mini/master/Color/jd.png, enabled=true
-
-=================================Loon===================================
-[Script]
-cron "0 0-23/5 * * *" script-path=https://gitee.com/lxk0301/jd_scripts/raw/master/jd_city.js,tag=城城领现金
-
-===================================Surge================================
-城城领现金 = type=cron,cronexp="0 0-23/5 * * *",wake-system=1,timeout=3600,script-path=https://gitee.com/lxk0301/jd_scripts/raw/master/jd_city.js
-
-====================================小火箭=============================
-城城领现金 = type=cron,script-path=https://gitee.com/lxk0301/jd_scripts/raw/master/jd_city.js, cronexpr="0 0-23/5 * * *", timeout=3600, enable=true
- */
 const $ = new Env('城城领现金');
 const notify = $.isNode() ? require('./sendNotify') : '';
 //Node.js用户请在jdCookie.js处填写京东ck;
@@ -30,7 +5,7 @@ const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 //自动抽奖 ，环境变量  JD_CITY_EXCHANGE
 let exchangeFlag = $.getdata('jdJxdExchange') || !!0;//是否开启自动抽奖，建议活动快结束开启，默认关闭
 //IOS等用户直接用NobyDa的jd cookie
-let cookiesArr = [], cookie = '', message;
+let cookiesArr = [], cookie = '';
 
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -41,12 +16,12 @@ if ($.isNode()) {
   cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
 }
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
-const author_codes = ['-ryUXP0JZ2EXYEGXSN7Dokj7yjr-DfMs'].sort(() => 0.5 - Math.random())
+const author_codes = [''].sort(() => 0.5 - Math.random())
 const self_code = []
+let ShareCodes = ['eH10jg-gs8XAtLhwn1t6IdNHDHdg5aXOb6FThLY']
 let pool = []
 !(async () => {
-  // console.log('内部互助没奖励了吧应该. 城城现在改为优先助力池子!(作者只吃第一个CK,其余池子!) 请查看群内频道通知!,5s后开始!')
-  // await $.wait(5000)
+
   if (!cookiesArr[0]) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
@@ -57,10 +32,6 @@ let pool = []
   } else {
     console.log(`脚本不会自动抽奖，建议活动快结束开启，默认关闭`)
   }
-  // if (process.env.CT_R != 'false') {
-  //   cookiesArr = cookiesArr.sort(() => 0.5 - Math.random())
-  //   console.log('CK顺序打乱!用来随机内部互助!,如需关闭CT_R为false')
-  // }
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -103,28 +74,18 @@ let pool = []
           // 助力次数耗尽 || 黑号
           break
         }
-        await $.wait(1500)
+
       }
       await getInviteInfo();//雇佣
-      // if (exchangeFlag || new Date().getDate() >= 30) {
-      //   const res = await city_lotteryAward();//抽奖
-      //   if (res && res > 0) {
-      //     for (let i = 0; i < new Array(res).fill('').length; i++) {
-      //       await $.wait(1000)
-      //       await city_lotteryAward();//抽奖
-      //     }
-      //   }
-      // }
-      await $.wait(1000)
     }
   }
 })()
-  .catch((e) => {
-    $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
-  })
-  .finally(() => {
-    $.done();
-  })
+    .catch((e) => {
+      $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
+    })
+    .finally(() => {
+      $.done();
+    })
 
 function taskPostUrl(functionId,body) {
   return {
@@ -168,7 +129,7 @@ function getInfo(inviteId, flag = false) {
                 if (vo && vo.remaingAssistNum === 0 && vo.status === "1") {
                   console.log(vo.roundNum)
                   await receiveCash(vo.roundNum)
-                  await $.wait(2*1000)
+
                 }
               }
             }
@@ -229,63 +190,10 @@ function getInviteInfo() {
     })
   })
 }
-function city_lotteryAward() {
-  let body = {}
-  return new Promise((resolve) => {
-    $.post(taskPostUrl("city_lotteryAward",body), async (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (safeGet(data)) {
-            console.log(`抽奖结果：${data}`);
-            data = JSON.parse(data);
-            if (data['data']['bizCode'] === 0) {
-              const lotteryNum = data['data']['result']['lotteryNum'];
-              resolve(lotteryNum);
-            }
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve();
-      }
-    })
-  })
-}
-function readShareCode(num=3) {
-  return new Promise(async resolve => {
-    $.get({url: `https://api.jdsharecode.xyz/api/city/${num}`, 'timeout': 10000}, (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (data) {
-            data = JSON.parse(data);
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve(data);
-      }
-    })
-    await $.wait(10000);
-    resolve()
-  })
-}
 //格式化助力码
 function shareCodesFormat() {
   return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
     $.newShareCodes = []
-    // const readShareCodeRes = await readShareCode(3);
-    // if (readShareCodeRes && readShareCodeRes.code === 200) {
-    //   pool = readShareCodeRes.data || [];
-    // }
     if ($.isNode()) {
       if (process.env.JD_CITY_EXCHANGE) {
         exchangeFlag = process.env.JD_CITY_EXCHANGE || exchangeFlag;
@@ -299,19 +207,10 @@ function shareCodesFormat() {
         }
       }
     }
-    // if ($.index - 1 == 0) {
-    //   console.log('首个帐号,助力作者和池子')
-    //   $.newShareCodes = [...new Set([...$.newShareCodes,...author_codes, ...pool])];
-    // } else {
-    //   console.log('非首个个帐号,优先向前助力')
-    //   $.newShareCodes = [...new Set([...$.newShareCodes,...self_code,...author_codes, ...pool])]
-    // }
     if ($.index == 1) {
-      console.log('首个帐号,助力作者和池子')
+      console.log('首个帐号,助力作者')
       $.newShareCodes = [...new Set([...author_codes,...pool,...$.newShareCodes])]
     } else{
-      // console.log('非首个帐号,助力池子')
-      // $.newShareCodes = [...new Set([...$.newShareCodes,...pool])]
       console.log('非首个个帐号,优先向前助力')
       $.newShareCodes = [...new Set([...$.newShareCodes,...self_code,...author_codes])]
     }
