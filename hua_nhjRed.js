@@ -3,15 +3,15 @@
 cron 0 0,8,20,22 * * *  https://raw.githubusercontent.com/smiek2121/scripts/master/gua_nhjRed.js
 整点跑 红包几率大点
 
-https://u.jd.com/SCMfs7u
+https://u.jd.com/SCuIm1H
 跳转到app 可查看助力情况
 
 返利变量：gua_nhjRed_rebateCode，若需要返利给自己，请自己修改环境变量[gua_nhjRed_rebateCode]
-SCMfs7u换成自己的返利
-export gua_nhjRed_rebateCode="SCMfs7u"
+SCuIm1H换成自己的返利
+export gua_nhjRed_rebateCode="SCuIm1H"
 */
 
-let rebateCodes = 'SCMfs7u'
+let rebateCodes = 'SCuIm1H'
 
 const $ = new Env('年货节红包');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
@@ -99,9 +99,9 @@ let nowTime = new Date().getTime() + new Date().getTimezoneOffset()*60*1000 + 8*
   }
   if(Object.getOwnPropertyNames($.shareCodeArr).length > 0 && $.shareCodeArr["updateTime"] != pinUpdateTime) $.setdata($.shareCodeArr,'gua_JDnhjRed')
   if(message){
-    $.msg($.name, ``, `${message}\nhttps://u.jd.com/SCMfs7u\n\n跳转到app 可查看助力情况`);
+    $.msg($.name, ``, `${message}\nhttps://u.jd.com/SCuIm1H\n\n跳转到app 可查看助力情况`);
     if ($.isNode()){
-      // await notify.sendNotify(`${$.name}`, `${message}\n\nhttps://u.jd.com/SCMfs7u\n跳转到app 可查看助力情况`);
+      // await notify.sendNotify(`${$.name}`, `${message}\n\nhttps://u.jd.com/SCuIm1H\n跳转到app 可查看助力情况`);
     }
   }
 })()
