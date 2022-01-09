@@ -1,5 +1,5 @@
 /*
-年货节超级红包
+年货节大红包呀
 cron 0 0,8,20,22 * * *  https://raw.githubusercontent.com/smiek2121/scripts/master/gua_nhjRed.js
 整点跑 红包几率大点
 
@@ -13,7 +13,7 @@ export gua_nhjRed_rebateCode="SCuIm1H"
 
 let rebateCodes = 'SCuIm1H'
 
-const $ = new Env('年货节红包');
+const $ = new Env('年货节大红包呀');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
 //IOS等用户直接用NobyDa的jd cookie
