@@ -1,6 +1,6 @@
 /*
 年货节大红包呀
-cron 0 0,8,20,22 * * *  https://raw.githubusercontent.com/smiek2121/scripts/master/gua_nhjRed.js
+cron 0 0,7,8,19,21 * * *  
 整点跑 红包几率大点
 
 https://u.jd.com/SCuIm1H
