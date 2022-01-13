@@ -1,6 +1,6 @@
 /*
 年货节红包
-cron: 0 0,7,8,19,21 * * *  
+cron: 0 0,7,10,19,21 * * *  
 整点跑 红包几率大点
 
 https://u.jd.com/SCuIm1H
@@ -13,7 +13,7 @@ export gua_nhjRed_rebateCode="SCuIm1H"
 
 let rebateCodes = 'SCuIm1H'
 
-const $ = new Env('年货节大红包呀');
+const $ = new Env('年货节红包');
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const notify = $.isNode() ? require('./sendNotify') : '';
 //IOS等用户直接用NobyDa的jd cookie
