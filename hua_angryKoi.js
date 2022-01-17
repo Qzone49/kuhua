@@ -1,5 +1,5 @@
 /*
-愤怒的锦鲤
+锦鲤
 更新时间：2021-7-11
 备注：高速并发请求，专治偷助力。在kois环境变量中填入需要助力的pt_pin，有多个请用@符号连接
 
@@ -16,7 +16,7 @@ export KOI_CHETOU_NUMBER="2"
 
 cron: 0 0 * * *
 */
-const $ = new Env("愤怒的锦鲤")
+const $ = new Env("锦鲤")
 const JD_API_HOST = 'https://api.m.jd.com/client.action';
 const ua = `jdltapp;iPhone;3.1.0;${Math.ceil(Math.random() * 4 + 10)}.${Math.ceil(Math.random() * 4)};${randomString(40)}`
 let fair_mode = process.env.KOI_FAIR_MODE == "true" ? true : false
