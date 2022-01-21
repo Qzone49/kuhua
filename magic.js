@@ -6,9 +6,10 @@ const {format} = require("date-fns");
 const notify = require('./sendNotify');
 const jdCookieNode = require('./jdCookie.js');
 const CryptoJS = require("crypto-js");
+const got = require("got");
 let cookies = [];
 let testMode = process.env.TEST_MODE?.includes('on') ? true
-    : __dirname.includes("/home/magic")
+    : __dirname.includes("magic")
 Object.keys(jdCookieNode).forEach((item) => {
     cookies.push(jdCookieNode[item])
 })
@@ -81,41 +82,49 @@ class Env {
         this.algo = {};
         this.bot = false;
         this.expire = false;
+        this.accounts = {};
     }
 
     async run(data = {
         wait: [1000, 2000],
         bot: false,
         delimiter: '',
-        filename: '',
         o2o: false,
         random: false,
         once: false,
         blacklist: [],
         whitelist: []
     }) {
-        console.log(
-            `${this.now()} ${this.name} ${data?.filename ? data?.filename
-                : ''} 开始运行...`);
+        this.filename = process.argv[1];
+        console.log(`${this.now()} ${this.name} ${this.filename} 开始运行...`);
         this.start = this.timestamp();
+        let accounts = "";
+        if (__dirname.includes("magic")) {
+            accounts = this.readFileSync('/home/magic/Work/wools/doc/account.json')
+        } else {
+            if (fs.existsSync('utils/account.json')) {
+                accounts = this.readFileSync('utils/account.json')
+            } else {
+                accounts = this.readFileSync('account.json')
+            }
+        }
+        accounts ? JSON.parse(accounts).forEach(
+            o => this.accounts[o.pt_pin] = o.remarks) : ''
         await this.config()
         if (data?.delimiter) {
             this.delimiter = data?.delimiter
-        }
-        if (data?.filename) {
-            this.filename = data.filename;
         }
         if (data?.bot) {
             this.bot = data.bot;
         }
         if (data?.blacklist?.length > 0) {
-            for (const cki of data.blacklist) {
+            for (const cki of this.__as(data.blacklist)) {
                 delete cookies[cki - 1];
             }
         }
         if (data?.whitelist?.length > 0) {
             let cks = []
-            for (const cki of data.whitelist) {
+            for (const cki of this.__as(data.whitelist)) {
                 if (cki - 1 < cookies.length) {
                     cks.push(cookies[cki - 1])
                 }
@@ -171,7 +180,7 @@ class Env {
                     await this.logic()
                     if (data?.o2o) {
                         await this.send();
-                        testMode ? this.log(this.msg) : ''
+                        testMode ? this.log(this.msg.join("\n")) : ''
                         this.msg = [];
                     }
                     if (once) {
@@ -188,7 +197,7 @@ class Env {
         await this.after()
         console.log(`${this.now()} ${this.name} 运行结束,耗时 ${this.timestamp()
         - this.start}ms\n`)
-        testMode && this.msg.length > 0 ? console.log(this.msg) : ''
+        testMode && this.msg.length > 0 ? console.log(this.msg.join("\n")) : ''
         if (!data?.o2o) {
             await this.send();
         }
@@ -196,6 +205,26 @@ class Env {
 
     async config() {
 
+    }
+    __as (es){
+        let b = [];
+        for (let e of es) {
+            if (typeof e === 'string') {
+                let start = e.split('-')[0] * 1
+                let end = e.split('-')[1] * 1
+                if (end - start === 1) {
+                    b.push(start)
+                    b.push(end)
+                } else {
+                    for (let i = start; i <= end; i++) {
+                        b.push(i)
+                    }
+                }
+            } else {
+                b.push(e)
+            }
+        }
+        return b
     }
 
     deleteCookie() {
@@ -253,13 +282,11 @@ class Env {
             === String.fromCharCode(77)
                 ? (fn.includes(av(y)) ? '10032' :
                     fn.includes(av(z)) ? '10028' :
-                        fn.includes(av(j)) ? 'c0ff1' :
+                        fn.includes(av(j)) ? '10001' :
                             fn.includes(av(k)) ? '10038' :
                                 fn.includes(av(m)) ? 'wx' : '') : ''
             : '';
-        if (this.appId !== 'wx') {
-            this.appId ? this.algo = await this._algo() : '';
-        }
+        this.appId ? this.algo = await this._algo() : '';
     }
 
     async wait(min, max) {
@@ -273,8 +300,23 @@ class Env {
 
     putMsg(msg) {
         this.log(msg)
-        this.bot ? this.msg.push(msg) :
-            this.msg.push(`【当前账号】 ${this.username} ${msg}`)
+        let r = [[' ', ''], ['优惠券', '券'], ['东券', '券'], ['店铺', ''],
+            ['恭喜', ''], ['获得', '']]
+        for (let ele of r) {
+            msg = msg.replace(ele[0], ele[1])
+        }
+        if (this.bot) {
+            this.msg.push(msg)
+        } else {
+            if (this.msg.length > 0 && this.msg[this.msg.length - 1].includes(
+                this.accounts[this.username] || this.username)) {
+                this.msg[this.msg.length - 1] = this.msg[this.msg.length
+                - 1].split(" ")[0] + ' ' + [this.msg[this.msg.length - 1].split(
+                    " ")[1], msg].join(',')
+            } else {
+                this.msg.push(`【当前账号】${this.accounts[this.username] || this.username} ${msg}`)
+            }
+        }
     }
 
     md5(str) {
@@ -287,7 +329,23 @@ class Env {
 
     log(...msg) {
         this.s ? console.log(...msg) : console.log(
-            `${this.now()} ${this.username}`, ...msg)
+            `${this.now()} ${this.accounts[this.username] || this.username}`,
+            ...msg)
+    }
+
+    //并
+    union(a, b) {
+        return a.concat(b.filter(o => !a.includes(o)))
+    }
+
+    //交
+    intersection(a, b) {
+        return a.filter(o => b.includes(o))
+    }
+
+    //交
+    different(a, b) {
+        return a.concat(b).filter(o => a.includes(o) && !b.includes(o))
     }
 
     build(url) {
@@ -426,6 +484,29 @@ class Env {
         return '';
     }
 
+    matchAll(pattern, string) {
+        pattern = (pattern instanceof Array) ? pattern : [pattern];
+        let match;
+        let result = [];
+        for (let p of pattern) {
+            while ((match = p.exec(string)) != null) {
+                let len = match.length;
+                if (len === 1) {
+                    result.push(match);
+                } else if (len === 2) {
+                    result.push(match[1]);
+                } else {
+                    let r = [];
+                    for (let i = 1; i < len; i++) {
+                        r.push(match[i])
+                    }
+                    result.push(r);
+                }
+            }
+        }
+        return result;
+    }
+
     async countdown(s) {
         let date = new Date();
         if (date.getMinutes() === 59) {
@@ -486,24 +567,29 @@ class Env {
         })
     }
 
+    //└
     async request(url, headers, body) {
         return new Promise((resolve, reject) => {
-            (body ? $.post(url, body, {headers: headers}) : $.get(url,
-                {headers: headers}))
+            let __config = headers?.headers ? headers : {headers: headers};
+            (body ? $.post(url, body, __config) : $.get(url, __config))
             .then(data => {
-                this.__lt(data.headers);
+                this.__lt(data);
                 resolve(data)
             })
             .catch(e => reject(e));
         })
     }
 
-    __lt(headers) {
+    __lt(data) {
         if (this.appId.length !== 2) {
             return
         }
-        let scs = headers['set-cookie'] || headers['Set-Cookie'] || ''
+        let scs = data?.headers['set-cookie'] || data?.headers['Set-Cookie']
+            || ''
         if (!scs) {
+            if (data?.data?.LZ_TOKEN_KEY && data?.data?.LZ_TOKEN_VALUE) {
+                this.lz = `LZ_TOKEN_KEY=${data.data.LZ_TOKEN_KEY};LZ_TOKEN_VALUE=${data.data.LZ_TOKEN_VALUE};`;
+            }
             return;
         }
         let LZ_TOKEN_KEY = '', LZ_TOKEN_VALUE = ''
@@ -520,11 +606,11 @@ class Env {
         if (LZ_TOKEN_KEY && LZ_TOKEN_VALUE) {
             this.lz = `${LZ_TOKEN_KEY}${LZ_TOKEN_VALUE}`
         }
-        testMode ? this.log('lz', this.lz) : ''
+        // testMode ? this.log('lz', this.lz) : ''
     }
 
     handler(res) {
-        let data = res.data;
+        let data = res?.data || res?.body || res;
         if (!data) {
             return;
         }
@@ -537,9 +623,11 @@ class Env {
                 let st = data.replace(/[\n\r]/g, '').replace(/jsonpCB.*\({/,
                     '{');
                 data = st.substring(0, st.length - 1)
-            } else if (/try{.*\({/) {
+            } else if (data.match(/try{.*\({/)) {
                 data = data.replace(/try{.*\({/, '{')
                 .replace(/}\)([;])?}catch\(e\){}/, '}')
+            } else if (data.includes("jsonp")) {
+                data = /{(.*)}/g.exec(data)[0]
             } else {
                 testMode ? console.log('例外', data) : ''
             }
@@ -571,6 +659,24 @@ class Env {
             const r = 16 * Math.random() | 0, n = "x" === x ? r : 3 & r | 8;
             return n.toString(36)
         })
+    }
+
+    async unfollow(shopId) {
+        let url = 'https://api.m.jd.com/client.action?g_ty=ls&g_tk=518274330'
+        let body = `functionId=followShop&body={"follow":"false","shopId":"${shopId}","award":"true","sourceRpc":"shop_app_home_follow"}&osVersion=13.7&appid=wh5&clientVersion=9.2.0&loginType=2&loginWQBiz=interact`
+        let headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Host': 'api.m.jd.com',
+            'Connection': 'keep-alive',
+            'Accept-Language': 'zh-cn',
+            'Cookie': this.cookie
+        }
+        headers['User-Agent'] = `Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.4(0x1800042c) NetType/4G Language/zh_CN miniProgram`
+        let {data} = await this.request(url, headers, body);
+        this.log(data.msg)
+        return data;
     }
 
     randomCallback(e = 1) {
@@ -623,7 +729,7 @@ class Env {
     }
 
     async get_bean() {
-        let data = await $.post('https://api.m.jd.com/client.action',
+        let {data} = await $.post('https://api.m.jd.com/client.action',
             `functionId=plantBeanIndex&body=${escape(
                 JSON.stringify({
                     version: "9.0.0.1",
@@ -635,11 +741,12 @@ class Env {
                 'Host': "api.m.jd.com",
                 "Cookie": this.cookie
             });
+        debugger
         return data.data.jwordShareInfo.shareUrl.split('Uuid=')[1] ?? ''
     }
 
     async get_farm() {
-        let data = await $.post(
+        let {data} = await $.post(
             'https://api.m.jd.com/client.action?functionId=initForFarm',
             `body=${escape(
                 JSON.stringify({"version": 4}))}&appid=wh5&clientVersion=9.1.0`,
@@ -649,48 +756,127 @@ class Env {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Cookie": this.cookie
             })
+        debugger
         return data?.farmUserPro?.shareCode ?? ''
     }
 
     async sign(fn, body = {}) {
-        const got = require('got');
-        const data = await got.post('https://api.jds.codes/sign', {
-            json: {"fn": fn, "body": body},
-            responseType: 'json'
-        });
-        testMode ? JSON.stringify(data.body) : '';
-        return data.body.data;
+        let ret;
+        try {
+            const data = await got.post(
+                'http://service-akrepdl6.gz.apigw.tencentcs.com/sign',
+                {
+                    json: {"fn": fn, "body": body},
+                    responseType: 'json'
+                });
+            testMode ? JSON.stringify(data.body) : '';
+            ret = {fn: data.body.fn, sign: data.body.body};
+        } catch (e) {
+            const data = await got.post('https://api.jds.codes/sign', {
+                json: {"fn": fn, "body": body},
+                responseType: 'json'
+            });
+            testMode ? JSON.stringify(data.body) : '';
+            ret = data.body.data;
+        }
+        return ret;
+
     }
 
     async _algo() {
-        let fp = function () {
-            let e = "0123456789", a = 13, i = ''
-            for (; a--;) {
-                i += e[Math.random() * e.length | 0]
+        if (this.appId === 'wx') {
+            let url = `https://${this.domain}/wxTeam/activity?activityId=${this.activityId}`
+            await this.request(url, {
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Mobile/15E148 Safari/604.1",
+                'Accept-Language': 'zh-cn',
+                'Cookie': this.cookie
+            })
+        } else {
+            let fp = function () {
+                let e = "0123456789", a = 13, i = ''
+                for (; a--;) {
+                    i += e[Math.random() * e.length | 0]
+                }
+                return (i + Date.now()).slice(0, 16)
+            }();
+            let data = await this.post(
+                'https://cactus.jd.com/request_algo?g_ty=ajax', JSON.stringify({
+                    "version": "1.0",
+                    "fp": fp,
+                    "appId": this.appId,
+                    "timestamp": this.timestamp(),
+                    "platform": "web",
+                    "expandParams": ''
+                }), {
+                    'Authority': 'cactus.jd.com',
+                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1',
+                    'Content-Type': 'application/json',
+                    'Origin': 'https://st.jingxi.com',
+                    'Referer': 'https://st.jingxi.com/',
+                });
+            return {
+                fp: fp.toString(),
+                tk: data?.data?.result?.tk || data?.result?.tk,
+                em: new Function(
+                    `return ${data?.data?.result?.algo
+                    || data?.result?.algo}`)()
             }
-            return (i + Date.now()).slice(0, 16)
-        }();
-        let data = await this.post(
-            'https://cactus.jd.com/request_algo?g_ty=ajax', JSON.stringify({
-                "version": "1.0",
-                "fp": fp,
-                "appId": this.appId,
-                "timestamp": this.timestamp(),
-                "platform": "web",
-                "expandParams": ''
-            }), {
-                'Authority': 'cactus.jd.com',
-                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1',
-                'Content-Type': 'application/json',
-                'Origin': 'https://st.jingxi.com',
-                'Referer': 'https://st.jingxi.com/',
-            });
-        return {
-            fp: fp.toString(),
-            tk: data?.data?.result?.tk || data?.result?.tk,
-            em: new Function(
-                `return ${data?.data?.result?.algo || data?.result?.algo}`)()
         }
+    }
+
+    async isvObfuscator() {
+        let url = `https://api.m.jd.com/client.action?functionId=isvObfuscator`
+        let body = ''
+        switch (this.domain) {
+            case 'cjhy-isv.isvjcloud.com':
+                body = 'body=%7B%22url%22%3A%22https%3A//cjhy-isv.isvjcloud.com%22%2C%22id%22%3A%22%22%7D&uuid=920cd9b12a1e621d91ca2c066f6348bb5d4b586b&client=apple&clientVersion=10.1.4&st=1633916729623&sv=102&sign=9eee1d69b69daf9e66659a049ffe075b'
+                break
+            case 'lzkj-isv.isvjcloud.com':
+                body = 'body=%7B%22url%22%3A%22https%3A//lzkj-isv.isvjcloud.com%22%2C%22id%22%3A%22%22%7D&uuid=925ce6441339525429252488722251fff6b10499&client=apple&clientVersion=10.1.4&st=1633777078141&sv=111&sign=00ed6b6f929625c69f367f1a0e5ad7c7'
+                break
+            case 'cjhydz-isv.isvjcloud.com':
+                body = 'adid=7B411CD9-D62C-425B-B083-9AFC49B94228&area=16_1332_42932_43102&body=%7B%22url%22%3A%22https%3A%5C/%5C/cjhydz-isv.isvjcloud.com%22%2C%22id%22%3A%22%22%7D&build=167541&client=apple&clientVersion=9.4.0&d_brand=apple&d_model=iPhone8%2C1&eid=eidId10b812191seBCFGmtbeTX2vXF3lbgDAVwQhSA8wKqj6OA9J4foPQm3UzRwrrLdO23B3E2wCUY/bODH01VnxiEnAUvoM6SiEnmP3IPqRuO%2By/%2BZo&isBackground=N&joycious=48&lang=zh_CN&networkType=wifi&networklibtype=JDNetworkBaseAF&openudid=2f7578cb634065f9beae94d013f172e197d62283&osVersion=13.1.2&partner=apple&rfs=0000&scope=11&screen=750%2A1334&sign=60bde51b4b7f7ff6e1bc1f473ecf3d41&st=1613720203903&sv=110&uts=0f31TVRjBStG9NoZJdXLGd939Wv4AlsWNAeL1nxafUsZqiV4NLsVElz6AjC4L7tsnZ1loeT2A8Z5/KfI/YoJAUfJzTd8kCedfnLG522ydI0p40oi8hT2p2sNZiIIRYCfjIr7IAL%2BFkLsrWdSiPZP5QLptc8Cy4Od6/cdYidClR0NwPMd58K5J9narz78y9ocGe8uTfyBIoA9aCd/X3Muxw%3D%3D&uuid=hjudwgohxzVu96krv/T6Hg%3D%3D&wifiBssid=9cf90c586c4468e00678545b16176ed2'
+                break
+            default:
+                body = 'adid=7B411CD9-D62C-425B-B083-9AFC49B94228&area=16_1332_42932_43102&body=%7B%22url%22%3A%22https%3A%5C/%5C/cjhydz-isv.isvjcloud.com%22%2C%22id%22%3A%22%22%7D&build=167541&client=apple&clientVersion=9.4.0&d_brand=apple&d_model=iPhone8%2C1&eid=eidId10b812191seBCFGmtbeTX2vXF3lbgDAVwQhSA8wKqj6OA9J4foPQm3UzRwrrLdO23B3E2wCUY/bODH01VnxiEnAUvoM6SiEnmP3IPqRuO%2By/%2BZo&isBackground=N&joycious=48&lang=zh_CN&networkType=wifi&networklibtype=JDNetworkBaseAF&openudid=2f7578cb634065f9beae94d013f172e197d62283&osVersion=13.1.2&partner=apple&rfs=0000&scope=11&screen=750%2A1334&sign=60bde51b4b7f7ff6e1bc1f473ecf3d41&st=1613720203903&sv=110&uts=0f31TVRjBStG9NoZJdXLGd939Wv4AlsWNAeL1nxafUsZqiV4NLsVElz6AjC4L7tsnZ1loeT2A8Z5/KfI/YoJAUfJzTd8kCedfnLG522ydI0p40oi8hT2p2sNZiIIRYCfjIr7IAL%2BFkLsrWdSiPZP5QLptc8Cy4Od6/cdYidClR0NwPMd58K5J9narz78y9ocGe8uTfyBIoA9aCd/X3Muxw%3D%3D&uuid=hjudwgohxzVu96krv/T6Hg%3D%3D&wifiBssid=9cf90c586c4468e00678545b16176ed2'
+        }
+        let headers = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-cn",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Host": "api.m.jd.com",
+            "Cookie": this.cookie,
+            "User-Agent": this.UA,
+        }
+        let {data} = await this.request(url, headers, body)
+        return data;
+    }
+
+    async api(fn, body) {
+        let url = `https://${this.domain}/${fn}`
+        let ck = `IsvToken=${this.Token};` + this.lz + (this.Pin
+            && "AUTH_C_USER=" + this.Pin + ";" || "")
+        this.domain.includes('cjhy') ? ck += 'APP_ABBR=CJHY;' : ''
+        let headers = {
+            "Host": this.domain,
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "zh-cn",
+            "Connection": "keep-alive",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Origin": `https://${this.domain}`,
+            "Cookie": ck,
+            "Referer": `${this.activityUrl}&sid=&un_area=`,
+            "User-Agent": this.UA
+        }
+        let {data} = await this.request(url, headers, body)
+        await this.wait(500, 1000)
+        return data;
     }
 }
 
